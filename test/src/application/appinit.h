@@ -43,6 +43,7 @@ typedef struct
 	unsigned int PanId;
 	unsigned int LocAddress;
 
+
 }Slot;
 #define SYS_STATUS_ALL_RX_ERR  (SYS_STATUS_RXPHE | SYS_STATUS_RXFCE | SYS_STATUS_RXRFSL | SYS_STATUS_RXSFDTO \
                                 | SYS_STATUS_AFFREJ | SYS_STATUS_LDEERR)

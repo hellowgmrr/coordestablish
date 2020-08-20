@@ -487,20 +487,20 @@ int CoordEstablish_Resp(void)
 
 }
 
-int CoordEstablish()
+int CoordEstablish(int main_anchor_ID,int area_num)
 {
 	int mode = Slot_data.AppMode;
 	int mode_num = Slot_data.AncNum;
-	if((mode == MODE_ANCHOR)&&(mode_num == 0))
+	if((mode == MODE_ANCHOR)&&(mode_num == main_anchor_ID))
 	{
 		double dist_arr[6][6] = {{0}};
 		double result_arr[6][3] = {{0}};
 		int j;
-		int cou=9;
-		for(j = Slot_data.AncSum - 1; j>0 ; j--)
+		int rec_num=9;//此处是为了让收到的多组同样的距离数据只显示一次
+		for(j = main_anchor_ID+3; j>main_anchor_ID ; j--)
 		{
              double dist = CoordEstablish_Init(MODE_ANCHOR,j);
-             sprintf(dist_str,"DIST0%d:%4.3f m",j,dist);
+             sprintf(dist_str,"DIST%d %d:%4.3f m",main_anchor_ID,j,dist);
              TcpTx(dist_str,15);
              sleep_ms(50);
              dist_arr[0][j] = dist;
@@ -528,14 +528,14 @@ int CoordEstablish()
 					num2 = rx_buffer[DATA_FRAME_DIST_DEST_ADDR_IDX+1];
 					int tmp = (rx_buffer[DATA_FRAME_DIST_IDX]<<16)|(rx_buffer[DATA_FRAME_DIST_IDX+1]<<8)|(rx_buffer[DATA_FRAME_DIST_IDX+2]);
 					dist_tmp = (double)(tmp/10000.0);
-					if(cou!=num2){
+					if(rec_num!=num2){
 					sprintf(dist_str,"DIST%d%d:%4.3f m",num1,num2,dist_tmp);
 					TcpTx(dist_str,16);}
 					dist_arr[num1][num2] = dist_tmp;
 					dist_arr[num2][num1] = dist_tmp;
-					if((num2 == Slot_data.AncSum - 1)&&(num1 == Slot_data.AncSum-2))
+					if((num2 == main_anchor_ID +Slot_data.AncSum-1)&&(num1 == main_anchor_ID +Slot_data.AncSum-2))
 						break;
-					cou=num2;
+					rec_num=num2;
 				}
 				dwt_write32bitreg(SYS_STATUS_ID,SYS_STATUS_RXFCG);
 			}
@@ -561,7 +561,7 @@ int CoordEstablish()
 	}
 
 
-	if((mode == MODE_ANCHOR)&&(mode_num != 0))
+	else if((mode == MODE_ANCHOR)&&((mode_num ==(main_anchor_ID+1))||(mode_num ==(main_anchor_ID+2))||(mode_num ==(main_anchor_ID+3))))
 	{
 		int init_enable = 0;
 		while(!init_enable)
@@ -572,7 +572,7 @@ int CoordEstablish()
 		{
 			int j;
 			double dist;
-		    for(j = Slot_data.AncSum - 1; j>Slot_data.AncNum ; j--)
+		    for(j =main_anchor_ID+3; j>Slot_data.AncNum ; j--)
 			{
 			    dist = CoordEstablish_Init(MODE_ANCHOR,j);
 			    sprintf(dist_str,"DIST%d%d:%f.4 m",Slot_data.AncNum,j,dist);
@@ -587,7 +587,7 @@ int CoordEstablish()
                 tx_msg[DATA_FRAME_DIST_IDX] = (tmp1&0xff0000)>>16;
                 tx_msg[DATA_FRAME_DIST_IDX+1] = (tmp1&0x00ff00)>>8;
                 tx_msg[DATA_FRAME_DIST_IDX+2] = tmp1&0x0000ff;
-                MessageSet(Slot_data.PanId,MODE_ANCHOR,0,MAC_COOEST_DIST,tx_msg);
+                MessageSet(Slot_data.PanId,MODE_ANCHOR,main_anchor_ID,MAC_COOEST_DIST,tx_msg);
 			    dwt_writetxdata(sizeof(tx_msg),tx_msg,0);
 			    dwt_writetxfctrl(sizeof(tx_msg),0);
 			    dwt_starttx(DWT_START_TX_IMMEDIATE);
@@ -608,6 +608,11 @@ int CoordEstablish()
 			}
 		}
 
+	}
+	else
+	{
+		area_num++;
+		sleep(60);
 	}
 
 }

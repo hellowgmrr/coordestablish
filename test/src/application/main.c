@@ -103,7 +103,7 @@ static dwt_config_t config = {
 Slot Slot_data =
 {
 	MODE_ANCHOR,  //Tag、Anchor、Monitor
-	3,            //Anchor0、1、2、3……
+	5,            //Anchor0、1、2、3……
 	4,            //单小区Anchor数
 	0xCADE,       //PanId
 	0x00,         //本地无线通信16位地址，当前代码中通过板子的身份自动配置，无需初始化
@@ -134,7 +134,9 @@ int main(void)
 	dwt_settxantennadelay(TX_ANT_DLY);
 	dwt_setrxantennadelay(RX_ANT_DLY);
 	//while(1){CoordEstablish_Resp();};
-	CoordEstablish();
+	int MainAnchorID=2;
+	int AreaNum=1;
+	CoordEstablish(MainAnchorID,AreaNum);
 
 
 
